@@ -60,7 +60,12 @@ void enqueue(struct queue *q, struct cube cube)
 struct node *dequeue(struct queue *q)
 {
   struct node *ptr;
-  if(q->front->next==NULL && q->rear->next==NULL)
+  if(q->front==NULL && q->rear==NULL)
+  {
+    ptr=NULL;
+    return ptr;
+  }
+  else if(q->front==q->rear)
   {
     ptr=q->front;
     q->front=q->rear=NULL;
@@ -327,7 +332,6 @@ struct cube D_move(struct cube cube)
 
 void check_node(struct node* ptr, struct queue *CLOSED)
 {
-
   struct cube cube=ptr->cube;
   if
   (
@@ -398,7 +402,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[4][7] == 'O' &&
     cube.cube[4][8] == 'O'))&&
-    wg[0]!='\0'
+    wg[0]=='\0'
   )
   {
     strcat(wg,cube.moves);
@@ -475,7 +479,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[5][2] == 'G' &&
     cube.cube[5][5] == 'G'))&&
-    wr[0]!='\0'
+    wr[0]=='\0'
   )
   {
     strcat(wr,cube.moves);
@@ -551,7 +555,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[4][0] == 'G' &&
     cube.cube[4][3] == 'G'))&&
-    wo[0]!='\0'
+    wo[0]=='\0'
   )
   {
     strcat(wo,cube.moves);
@@ -627,7 +631,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[2][8] == 'O' &&
     cube.cube[2][5] == 'O'))&&
-    wb[0]!='\0'
+    wb[0]=='\0'
   )
   {
     strcat(wb,cube.moves);
@@ -704,7 +708,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[2][8] == 'R' &&
     cube.cube[2][5] == 'R'))&&
-    yb[0]!='\0'
+    yb[0]=='\0'
   )
   {
     strcat(yb,cube.moves);
@@ -781,7 +785,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[4][0] == 'B' &&
     cube.cube[4][3] == 'B'))&&
-    yo[0]!='\0'
+    yo[0]=='\0'
   )
   {
     strcat(yo,cube.moves);
@@ -857,7 +861,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[5][2] == 'B' &&
     cube.cube[5][5] == 'B'))&&
-    yr[0]!='\0'
+    yr[0]=='\0'
   )
   {
     strcat(yr,cube.moves);
@@ -933,7 +937,7 @@ void check_node(struct node* ptr, struct queue *CLOSED)
 
     cube.cube[4][7] == 'R' &&
     cube.cube[4][8] == 'R'))&&
-    yg[0]!='\0'
+    yg[0]=='\0'
   )
   {
     strcat(yg,cube.moves);
@@ -1167,6 +1171,17 @@ int compare_cubes(struct cube cube1,struct cube cube2)
   return 1;
 }
 
+char recheck(char *s)
+{
+  int i;
+  for(i=strlen(s)-1;i>=0;i--)
+  {
+    if(s[i]!=' ' && s[i]!='\'' && s[i]!='2')
+    break;
+  }
+  return s[i];
+}
+
 
 int check_visited(struct queue* OPEN, struct queue* CLOSED, struct cube c1)
 {
@@ -1213,10 +1228,14 @@ void moveGen(struct queue* OPEN, struct queue* CLOSED, struct node* picked_node)
     ""
   };
   char **s=str;
+
   while(**s != '\0')
   {
-    c=move(picked_node->cube, *s);
-    enqueue(OPEN, c);
+    if(**s!=recheck(picked_node->cube.moves))
+    {
+      c=move(picked_node->cube, *s);
+      enqueue(OPEN, c);
+    }
     s++;
   }
   delete_node(picked_node);
@@ -1228,14 +1247,14 @@ int goalstate()
 {
   if
   (
-    wg[0]!='\0' &&
-    wb[0]!='\0' &&
-    wo[0]!='\0' &&
-    wr[0]!='\0' &&
-    yg[0]!='\0' &&
-    yb[0]!='\0' &&
-    yo[0]!='\0' &&
-    yr[0]!='\0'
+    yr[0]!='\0' ||
+    yg[0]!='\0' ||
+    yb[0]!='\0' ||
+    yo[0]!='\0' ||
+    wr[0]!='\0' ||
+    wg[0]!='\0' ||
+    wb[0]!='\0' ||
+    wo[0]!='\0'
   )
   {
     return 1;
@@ -1405,20 +1424,25 @@ int main()
   cube = initialize_cube();
   printf("Enter the scramble: ");
   gets(str);
-  cube=getstate(str,cube)
+  cube=getstate(str,cube);
 
   cube.moves[0] = '\0';
 
   enqueue(&OPEN, cube);
+  struct node *ptr1 = OPEN.front;
 
-  check_node(OPEN.front, &CLOSED);
+  check_node(ptr1, &CLOSED);
   picked_node=dequeue(&OPEN);
 
   while(!goalstate())
   {
     moveGen(&OPEN, &CLOSED, picked_node);
-    printf("%s", wo);
     picked_node = dequeue(&OPEN);
+    if(picked_node==NULL)
+    {
+      printf("End");
+      return 0;
+    }
     check_node(picked_node, &CLOSED);
   }
 
